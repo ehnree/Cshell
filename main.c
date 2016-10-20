@@ -23,19 +23,45 @@
 #include <string.h> 
 #include <stdbool.h>
 
-int main()
+#define INTERACTIVE_MODE 0
+#define BATCH_MODE 1
+
+int main(int argc, char* argv[])
 {
-	
-	char* line;
+
+
+	char* line = NULL;
+	char* batch_file = NULL;
+	int mode = 0;
 	size_t size;
+	FILE* buffer = stdin;
+ 
+ 	// Set mode
+	if (argc == 1) {
+		// interactive mode
+		mode = INTERACTIVE_MODE;
+	} else if (argc == 2) {
+		//batch mode
+		batch_file = argv[1];
+		mode = BATCH_MODE;
+		buffer = fopen(batch_file, "r");
+	} else {
+		fprintf( stderr, "Proper usage of shell is: shell [batchfile]\n");
+		exit(EXIT_FAILURE);
+	}
 
 	while(1) {
 		// Get executable name
-		if (getline(&line, &size, stdin) == -1) {
-			printf("Error...");
+		if (getline(&line, &size, buffer) == -1) {
+			printf("\n");
+			exit(EXIT_SUCCESS);
+			// fprintf( stderr, "Error...");
 		} else {
+			// Different depending on mode
+			// Batch mode needs to also check for EOF.
+			// Lines in format <command> <args ... > [;] 
+
 			// Check for all whitespace
-			// printf("got here");
 			bool ws = true;
 			for (int i = 0; i < size; i ++) {
 				if (!isspace(line[i])) {
