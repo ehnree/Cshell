@@ -9,7 +9,7 @@ CFLAGS=-I -Wall -std=c99
 # make: main.o
 # 	$(CC) -o shell main.o -I.
 make:
-	$(CC) main.c -o shell $(CFLAGS)
+	$(CC) main.c -o myshell $(CFLAGS)
 
 clean:
-	rm -f *.o *~ core* shell
+	rm -f *.o *~ core* myshell
