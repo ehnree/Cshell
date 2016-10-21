@@ -36,11 +36,13 @@ typedef struct {
 typedef struct {
 	void (*cd) (char*);
 	void (*pwd)();
+	void (*echo)(char*);
 } CMD;
 
 CMD cmd;
 ENV env;
 
+void shell_echo(char* line);
 void shell_cd(char* path);
 void shell_pwd();
 void read_lines();
@@ -85,6 +87,7 @@ void init_shell(int argc, char* argv[])
 
 	cmd.cd = &shell_cd;
 	cmd.pwd = &shell_pwd;
+	cmd.echo = &shell_echo;
 
 }
 
@@ -138,7 +141,10 @@ void shell_fn(char* line)
 		cmd.cd(token);
 	} else if ((strcmp(token, "pwd")) == 0) {
 		cmd.pwd();
-	}
+	} else if ((strcmp(token, "echo")) == 0) {
+		token = strtok(NULL, "");
+		cmd.echo(token);
+	} 
 
 }
 
@@ -155,4 +161,9 @@ void shell_cd(char* path)
 void shell_pwd()
 {
 	printf("%s\n", env.PWD);
+}
+
+void shell_echo(char* line)
+{
+	printf("%s\n", line);
 }
