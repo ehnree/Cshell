@@ -35,12 +35,14 @@ typedef struct {
 
 typedef struct {
 	void (*cd) (char*);
+	void (*pwd)();
 } CMD;
 
 CMD cmd;
 ENV env;
 
 void shell_cd(char* path);
+void shell_pwd();
 void read_lines();
 void init_shell(int argc, char* argv[]);
 void shell_fn(char* path);
@@ -82,6 +84,7 @@ void init_shell(int argc, char* argv[])
 	}
 
 	cmd.cd = &shell_cd;
+	cmd.pwd = &shell_pwd;
 
 }
 
@@ -118,9 +121,8 @@ void read_lines()
 				if ((pos=strchr(line, '\n')) != NULL)
 				    *pos = '\0';
 
+				// pass stripped line
 				shell_fn(line);
-				//pass args to function
-				//arg handling?
 			}
 		}
 	}
@@ -132,29 +134,25 @@ void shell_fn(char* line)
 	char* token = strtok(line, " ");
 
 	if (strcmp(token, "cd") == 0) {
-		printf("Calling cd\n");
 		token = strtok(NULL, " ");
-
-
-		// char buffer[strlen(token) - 1];
-		// printf("%d\n", strlen(token));
-		// int i = 0;
-		// while (i < strlen(token) - 1) {
-		// 	buffer[i] = token[i];
-		// 	i++;
-		// }
-		// while buffer, token, strlen(1));
-		// printf("directory is : %s\n", buffer);
-
 		cmd.cd(token);
+	} else if ((strcmp(token, "pwd")) == 0) {
+		cmd.pwd();
 	}
 
 }
 
-void shell_cd(char* path){
+void shell_cd(char* path)
+{
 	if(chdir(path) == -1){
 		fprintf(stderr, "shell_cd(): error finding path %s\n", path);
 	}
 	getcwd(env.PWD, sizeof(env.PWD));
 	printf("PWD is: %s\n", env.PWD);
+}
+
+
+void shell_pwd()
+{
+	printf("%s\n", env.PWD);
 }
