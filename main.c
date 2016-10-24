@@ -156,6 +156,7 @@ void shell_fn(char* line)
 	if (token != NULL) {
 		if (token[0] == '.' && token[1] == '/') {
 			// exec the thing
+			token+=2;
 			shell_exec(token, orig_line);
 		} else if (strcmp(token, "cd") == 0) {		
 			token = strtok(NULL, " ");
@@ -182,39 +183,63 @@ void shell_fn(char* line)
 void shell_exec(char* exec, char* line)
 {
 
-	int i = -1;
 	char* temp = line;
-	printf("line is %s\n", temp);
-	
-	// temp = strrchr(line, ' ');
+	char** res = NULL;
+	char* p = strtok(line, " ");
+	// printf("exec is %s\n", exec);
+	//skip to first argument
+	if ( p != NULL ) { 
+		p = strtok(NULL, " ");
+		int n_spaces = 0, i;
 
-	while (temp != NULL) {
-		// printf("got here\n");
-		if (*temp != ' ') {
-			// printf("found not space\n");
-			i++;
-			temp = strchr(temp, ' ');
-		} else {
-			// printf("found space\n");
-	    	temp++;
-	    }	
+		while (p) {
+			res = realloc(res, sizeof(char*) * ++n_spaces);
+
+			if (res == NULL)
+				exit(-1);
+
+			res[n_spaces-1] = p;
+
+			p = strtok (NULL, " ");
+
+			res = realloc (res, sizeof (char*) * (n_spaces+1));
+			res[n_spaces] = 0;
+		}
 	}
 
+	/* print the result */
 
-	printf("temp is: %s\n", temp);
-	printf("%d args\n", i);
-
-	// copy the args over
-	// char* exec_args[i];
-	// exec_args[0] = strtok(args, " ");
-	// for (int j = 1; j < i; j++) {
-	// 	exec_args[j] = strtok(NULL, " "); 
+	// for (i = 0; i < (n_spaces+1); i++) {
+ //  		printf ("res[%d] = %s\n", i, res[i]);
 	// }
-	// char* args[env.argc];
 
-	// for (int i = 1; i < env.argc; i++) {
-	// 	args[i - 1] = env.argv[i];
-	// }
+	pid_t pid, endPid;
+	int status;
+	switch ((pid = fork())) 
+	{
+		case -1:
+			// Fork failed
+			perror("Parent: Error: Failed to fork\n");
+			exit(EXIT_FAILURE);
+			break;
+		case 0:
+			
+			if (exec == NULL) {
+				printf("Parent: Error: Must provide path to a binary executable.\n");
+				return;
+			}
+			execve( exec, res, NULL );
+			break;
+		default:
+			// printf("Parent: Waiting on child process to complete\n");
+			while ((endPid = waitpid(pid, &status, WNOHANG|WUNTRACED)) == 0) {} 
+			if (endPid == -1) {
+				// waitpid error
+				perror("Parent: Error: waitpid failed\n");
+				exit(EXIT_FAILURE);
+			}
+			free(res);
+	}
 }
 
 void shell_cd(char* path)
