@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <fcntl.h>
 
 #define INTERACTIVE_MODE 0
 #define BATCH_MODE 1
@@ -149,7 +150,7 @@ void shell_fn(char* line)
 {
 	char orig_line[128];
 
-	strcpy(orig_line, line);	
+	strcpy(orig_line, line);
 	// printf("line before is: %s\n", line);
 	char* token = strtok(line, " ");
 	// printf("line is: %s\n", line);
@@ -158,7 +159,7 @@ void shell_fn(char* line)
 			// exec the thing
 			token+=2;
 			shell_exec(token, orig_line);
-		} else if (strcmp(token, "cd") == 0) {		
+		} else if (strcmp(token, "cd") == 0) {
 			token = strtok(NULL, " ");
 			cmd.cd(token);
 		} else if ((strcmp(token, "pwd")) == 0) {
@@ -186,13 +187,23 @@ void shell_exec(char* exec, char* line)
 	char* temp = line;
 	char** res = NULL;
 	char* p = strtok(line, " ");
+	FILE* fp = NULL;
+	bool redirect = false;
 	// printf("exec is %s\n", exec);
 	//skip to first argument
-	if ( p != NULL ) { 
+	if ( p != NULL ) {
 		p = strtok(NULL, " ");
 		int n_spaces = 0, i;
 
 		while (p) {
+
+			if (*p == '>') {
+				// get output file
+				p = strtok(NULL, " ");
+				redirect = true;
+				break;
+			}
+
 			res = realloc(res, sizeof(char*) * ++n_spaces);
 
 			if (res == NULL)
@@ -215,7 +226,7 @@ void shell_exec(char* exec, char* line)
 
 	pid_t pid, endPid;
 	int status;
-	switch ((pid = fork())) 
+	switch ((pid = fork()))
 	{
 		case -1:
 			// Fork failed
@@ -223,21 +234,34 @@ void shell_exec(char* exec, char* line)
 			exit(EXIT_FAILURE);
 			break;
 		case 0:
-			
+			//child process
 			if (exec == NULL) {
 				printf("Parent: Error: Must provide path to a binary executable.\n");
 				return;
+			}
+
+			if (redirect) {
+				// open file pointer to file name
+				int fd = open(p, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+				if (fd < 0) {
+					fprintf(stderr, "Failed to write to file: %s\n", p);
+					return;
+				}
+				dup2(fd, 1);
+				close(fd);
 			}
 			execve( exec, res, NULL );
 			break;
 		default:
 			// printf("Parent: Waiting on child process to complete\n");
-			while ((endPid = waitpid(pid, &status, WNOHANG|WUNTRACED)) == 0) {} 
+			while ((endPid = waitpid(pid, &status, WNOHANG|WUNTRACED)) == 0) {}
 			if (endPid == -1) {
 				// waitpid error
 				perror("Parent: Error: waitpid failed\n");
 				exit(EXIT_FAILURE);
 			}
+			if (fp)
+				fclose(fp);
 			free(res);
 	}
 }
@@ -276,7 +300,7 @@ void shell_dir(char* dir)
 			printf("%s\n", de->d_name);
 		}
 		closedir(d);
-	}	
+	}
 }
 void shell_help()
 {
