@@ -33,6 +33,10 @@
 #define REDIRECT_TO_NEW 1
 #define REDIRECT_TO_NEW_OR_APPEND 2
 
+#define WAIT_FOR_CHILD 0
+#define RUN_IN_BACKGROUND 1
+
+
 typedef struct {
 	int mode;
 	FILE* buffer;
@@ -190,13 +194,16 @@ void shell_exec(char* exec, char* line)
 
 	char* temp = line;
 	char** res = NULL;
+
+	// check for background execution
+	int background_exec = WAIT_FOR_CHILD;
+	if (strrchr(line, '&'))
+		background_exec = RUN_IN_BACKGROUND;
+
 	char* p = strtok(line, " ");
 	FILE* fp = NULL;
 	int redirect = NO_REDIRECT;
 
-	#define NO_REDIRECT 0
-	#define REDIRECT_TO_NEW 1
-	#define REDIRECT_TO_NEW_OR_APPEND 2
 	// printf("exec is %s\n", exec);
 	//skip to first argument
 	if ( p != NULL ) {
@@ -274,11 +281,13 @@ void shell_exec(char* exec, char* line)
 			break;
 		default:
 			// printf("Parent: Waiting on child process to complete\n");
-			while ((endPid = waitpid(pid, &status, WNOHANG|WUNTRACED)) == 0) {}
-			if (endPid == -1) {
-				// waitpid error
-				perror("Parent: Error: waitpid failed\n");
-				exit(EXIT_FAILURE);
+			if (background_exec == WAIT_FOR_CHILD) {
+				while ((endPid = waitpid(pid, &status, WNOHANG|WUNTRACED)) == 0) {}
+				if (endPid == -1) {
+					// waitpid error
+					perror("Parent: Error: waitpid failed\n");
+					exit(EXIT_FAILURE);
+				}
 			}
 			if (fp)
 				fclose(fp);

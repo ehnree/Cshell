@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int main(int argc, char* argv[])
 {
+    sleep(5);
     printf("I am a child process!\n");
     printf("Args passed:\n");
 
