@@ -33,6 +33,8 @@ typedef struct {
 	FILE* buffer;
 	char PWD[1024];
 	char** env;
+	char** argv;
+	int argc;
 } ENV;
 
 typedef struct {
@@ -65,6 +67,7 @@ void shell_dir(char* dir);
 void shell_environ();
 
 // TODO
+void shell_exec(char* exec, char* line);
 void shell_help();
 
 
@@ -80,6 +83,8 @@ void init_shell(int argc, char* argv[], char* envp[])
 {
 	env.mode = INTERACTIVE_MODE;
 	env.env = envp;
+	env.argv = argv;
+	env.argc = argc;
 	env.buffer = stdin;
 
 	if(getcwd(env.PWD, sizeof(env.PWD)) == NULL)
@@ -120,7 +125,7 @@ void read_lines()
 
 	while(1) {
 		printf("%s ~> ", env.PWD);
-		
+
 		// Get executable name
 		if (getline(&line, &size, env.buffer) == -1) {
 			printf("\n");
@@ -142,10 +147,17 @@ void read_lines()
 
 void shell_fn(char* line)
 {
-	char* token = strtok(line, " ");
+	char orig_line[128];
 
+	strcpy(orig_line, line);	
+	// printf("line before is: %s\n", line);
+	char* token = strtok(line, " ");
+	// printf("line is: %s\n", line);
 	if (token != NULL) {
-		if (strcmp(token, "cd") == 0) {		
+		if (token[0] == '.' && token[1] == '/') {
+			// exec the thing
+			shell_exec(token, orig_line);
+		} else if (strcmp(token, "cd") == 0) {		
 			token = strtok(NULL, " ");
 			cmd.cd(token);
 		} else if ((strcmp(token, "pwd")) == 0) {
@@ -165,7 +177,44 @@ void shell_fn(char* line)
 		}
 	}
 
+}
 
+void shell_exec(char* exec, char* line)
+{
+
+	int i = -1;
+	char* temp = line;
+	printf("line is %s\n", temp);
+	
+	// temp = strrchr(line, ' ');
+
+	while (temp != NULL) {
+		// printf("got here\n");
+		if (*temp != ' ') {
+			// printf("found not space\n");
+			i++;
+			temp = strchr(temp, ' ');
+		} else {
+			// printf("found space\n");
+	    	temp++;
+	    }	
+	}
+
+
+	printf("temp is: %s\n", temp);
+	printf("%d args\n", i);
+
+	// copy the args over
+	// char* exec_args[i];
+	// exec_args[0] = strtok(args, " ");
+	// for (int j = 1; j < i; j++) {
+	// 	exec_args[j] = strtok(NULL, " "); 
+	// }
+	// char* args[env.argc];
+
+	// for (int i = 1; i < env.argc; i++) {
+	// 	args[i - 1] = env.argv[i];
+	// }
 }
 
 void shell_cd(char* path)
