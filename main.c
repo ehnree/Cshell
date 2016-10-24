@@ -29,6 +29,10 @@
 #define INTERACTIVE_MODE 0
 #define BATCH_MODE 1
 
+#define NO_REDIRECT 0
+#define REDIRECT_TO_NEW 1
+#define REDIRECT_TO_NEW_OR_APPEND 2
+
 typedef struct {
 	int mode;
 	FILE* buffer;
@@ -188,7 +192,11 @@ void shell_exec(char* exec, char* line)
 	char** res = NULL;
 	char* p = strtok(line, " ");
 	FILE* fp = NULL;
-	bool redirect = false;
+	int redirect = NO_REDIRECT;
+
+	#define NO_REDIRECT 0
+	#define REDIRECT_TO_NEW 1
+	#define REDIRECT_TO_NEW_OR_APPEND 2
 	// printf("exec is %s\n", exec);
 	//skip to first argument
 	if ( p != NULL ) {
@@ -199,8 +207,16 @@ void shell_exec(char* exec, char* line)
 
 			if (*p == '>') {
 				// get output file
+				if (*(p+1) == '>') {
+					redirect = REDIRECT_TO_NEW_OR_APPEND;
+				} else {
+					redirect = REDIRECT_TO_NEW;
+			  }
 				p = strtok(NULL, " ");
-				redirect = true;
+				if (!p) {
+					fprintf(stderr, "Error: No output file provided.\n");
+					return;
+				}
 				break;
 			}
 
@@ -242,7 +258,11 @@ void shell_exec(char* exec, char* line)
 
 			if (redirect) {
 				// open file pointer to file name
-				int fd = open(p, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+				int fd;
+				if (redirect == REDIRECT_TO_NEW_OR_APPEND)
+					fd = open(p, O_CREAT | O_APPEND | O_WRONLY, S_IRUSR | S_IWUSR);
+				else if (redirect == REDIRECT_TO_NEW)
+					fd = open(p, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
 				if (fd < 0) {
 					fprintf(stderr, "Failed to write to file: %s\n", p);
 					return;
