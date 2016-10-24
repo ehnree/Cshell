@@ -1,4 +1,0 @@
-I am a child process!
-Args passed:
-hi
-hi
