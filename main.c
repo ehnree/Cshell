@@ -32,55 +32,56 @@ typedef struct {
 	int mode;
 	FILE* buffer;
 	char PWD[1024];
+	char** env;
 } ENV;
 
 typedef struct {
 	void (*cd) (char*);
 	void (*pwd)();
+	void (*dir)(char*);
+	void (*clr)();
+	void (*pause)();
 	void (*echo)(char*);
+	void (*environ)();
 
 	// TODO
-	void (*dir)(char*);
 	void (*help)();
-	void (*pause)();
-	void (*environ)();
-	void (*clr)();
 } CMD;
 
 CMD cmd;
 ENV env;
 
 void read_lines();
-void init_shell(int argc, char* argv[]);
+void init_shell(int argc, char* argv[], char* envp[]);
 void shell_fn(char* path);
 
 // DONE
 void shell_echo(char* line);
 void shell_cd(char* path);
 void shell_pwd();
+void shell_clr();
+void shell_pause();
+void shell_dir(char* dir);
+void shell_environ();
 
 // TODO
-void shell_dir(char* dir);
 void shell_help();
-void shell_pause();
-void shell_environ();
-void shell_clr();
 
 
-int main(int argc, char* argv[])
+int main(int argc, char* argv[], char* envp[])
 {
-	char* cwd = NULL;
-
-	init_shell(argc, argv);
+	init_shell(argc, argv, envp);
 	read_lines();
 
 	return 0;
 }
 
-void init_shell(int argc, char* argv[])
+void init_shell(int argc, char* argv[], char* envp[])
 {
 	env.mode = INTERACTIVE_MODE;
+	env.env = envp;
 	env.buffer = stdin;
+
 	if(getcwd(env.PWD, sizeof(env.PWD)) == NULL)
 	{
 		fprintf(stderr, "init_shell(): getcwd() error. cannot get PWD\n");
@@ -107,7 +108,9 @@ void init_shell(int argc, char* argv[])
 	cmd.pwd = &shell_pwd;
 	cmd.echo = &shell_echo;
 	cmd.dir = &shell_dir;
-
+	cmd.clr = &shell_clr;
+	cmd.pause = &shell_pause;
+	cmd.environ = &shell_environ;
 }
 
 void read_lines()
@@ -167,6 +170,12 @@ void shell_fn(char* line)
 	} else if ((strcmp(token, "dir")) == 0) {
 		token = strtok(NULL, "");
 		cmd.dir(token);
+	} else if ((strcmp(token, "clr")) == 0) {
+		cmd.clr();
+	} else if ((strcmp(token, "pause")) == 0) {
+		cmd.pause();
+	} else if ((strcmp(token, "environ")) == 0) {
+		cmd.environ();
 	}
 
 }
@@ -213,13 +222,20 @@ void shell_help()
 }
 void shell_pause()
 {
-
+	printf("waiting for enter... \n");
+	while(getc(env.buffer) != '\n'){}
 }
 void shell_environ()
 {
+	char** envPtr;
+	char* envVar;
+	for (envPtr = env.env; *envPtr != NULL; envPtr++) {
+		envVar = *envPtr;
+		printf("%s\n", envVar);
+	}
 
 }
 void shell_clr()
 {
-
+	printf("\033[2J");
 }
