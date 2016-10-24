@@ -119,8 +119,9 @@ void read_lines()
 	size_t size;
 
 	while(1) {
-		// Get executable name
 		printf("%s ~> ", env.PWD);
+		
+		// Get executable name
 		if (getline(&line, &size, env.buffer) == -1) {
 			printf("\n");
 			exit(EXIT_SUCCESS);
@@ -129,54 +130,41 @@ void read_lines()
 			// Different depending on mode
 			// Batch mode needs to also check for EOF.
 			// Lines in format <command> <args ... > [;]
+			char *pos;
+			if ((pos=strchr(line, '\n')) != NULL)
+		    	*pos = '\0';
 
-			// Check for all whitespace
-			bool ws = true;
-			for (int i = 0; i < size; i ++) {
-				if (!isspace(line[i]) || (int) line[i] != 0 ) {
-					ws = false;
-					break;
-				}
-			}
-			if (!ws) {
-				//tokenize by (eventually arbitrary) whitespace
-				//check if first argument is a command
-
-				// strip new line char at the end
-				char *pos;
-				if ((pos=strchr(line, '\n')) != NULL)
-				    *pos = '\0';
-
-				// pass stripped line
-				shell_fn(line);
-			}
+			// pass stripped line
+			shell_fn(line);
 		}
 	}
-
 }
 
 void shell_fn(char* line)
 {
 	char* token = strtok(line, " ");
 
-	if (strcmp(token, "cd") == 0) {
-		token = strtok(NULL, " ");
-		cmd.cd(token);
-	} else if ((strcmp(token, "pwd")) == 0) {
-		cmd.pwd();
-	} else if ((strcmp(token, "echo")) == 0) {
-		token = strtok(NULL, "");
-		cmd.echo(token);
-	} else if ((strcmp(token, "dir")) == 0) {
-		token = strtok(NULL, "");
-		cmd.dir(token);
-	} else if ((strcmp(token, "clr")) == 0) {
-		cmd.clr();
-	} else if ((strcmp(token, "pause")) == 0) {
-		cmd.pause();
-	} else if ((strcmp(token, "environ")) == 0) {
-		cmd.environ();
+	if (token != NULL) {
+		if (strcmp(token, "cd") == 0) {		
+			token = strtok(NULL, " ");
+			cmd.cd(token);
+		} else if ((strcmp(token, "pwd")) == 0) {
+			cmd.pwd();
+		} else if ((strcmp(token, "echo")) == 0) {
+			token = strtok(NULL, "");
+			cmd.echo(token);
+		} else if ((strcmp(token, "dir")) == 0) {
+			token = strtok(NULL, "");
+			cmd.dir(token);
+		} else if ((strcmp(token, "clr")) == 0) {
+			cmd.clr();
+		} else if ((strcmp(token, "pause")) == 0) {
+			cmd.pause();
+		} else if ((strcmp(token, "environ")) == 0) {
+			cmd.environ();
+		}
 	}
+
 
 }
 
