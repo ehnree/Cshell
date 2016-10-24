@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #define INTERACTIVE_MODE 0
 #define BATCH_MODE 1
@@ -37,17 +38,34 @@ typedef struct {
 	void (*cd) (char*);
 	void (*pwd)();
 	void (*echo)(char*);
+
+	// TODO
+	void (*dir)(char*);
+	void (*help)();
+	void (*pause)();
+	void (*environ)();
+	void (*clr)();
 } CMD;
 
 CMD cmd;
 ENV env;
 
-void shell_echo(char* line);
-void shell_cd(char* path);
-void shell_pwd();
 void read_lines();
 void init_shell(int argc, char* argv[]);
 void shell_fn(char* path);
+
+// DONE
+void shell_echo(char* line);
+void shell_cd(char* path);
+void shell_pwd();
+
+// TODO
+void shell_dir(char* dir);
+void shell_help();
+void shell_pause();
+void shell_environ();
+void shell_clr();
+
 
 int main(int argc, char* argv[])
 {
@@ -110,7 +128,8 @@ void read_lines()
 			// Check for all whitespace
 			bool ws = true;
 			for (int i = 0; i < size; i ++) {
-				if (!isspace(line[i])) {
+				if (!isspace(line[i]) || (int) line[i] != 0 ) {
+					printf("Found non whitespace: %d\n", (int) line[i]);
 					ws = false;
 					break;
 				}
@@ -166,4 +185,25 @@ void shell_pwd()
 void shell_echo(char* line)
 {
 	printf("%s\n", line);
+}
+
+void shell_dir(char* dir)
+{
+
+}
+void shell_help()
+{
+
+}
+void shell_pause()
+{
+
+}
+void shell_environ()
+{
+
+}
+void shell_clr()
+{
+
 }
