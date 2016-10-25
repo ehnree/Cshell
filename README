@@ -1,0 +1,40 @@
+C Shell
+
+Authors: Henry Zhou and Walton Lee
+
+files:
+main.c - code for all of the shell
+Makefile - Make script
+
+This C Program emulates a linux shell. It implements various functions available
+to the regular linux shell including cd, clr, dir, environ, echo, help, pause
+and quit. In addition, our shell supports piping output to a file, running
+executables and specifying background execution.Running the shell can occur in
+one of two ways, with a batch file that will run until completion or interactive
+mode which allows for individual commands to be typed and processed.
+
+Design overview:
+
+The main design choice that we made for the shell was to maintain all the
+necessary global variables in an environment struct and hold function pointers
+to all the possible commands in a command struct. This allowed for cleaner
+program structure and modularity. Each recognized command would be located in
+a switch statement that would call the relevant function pointer in our CMD
+struct.
+
+Ambiguities:
+
+In batch mode, our program separates lines using the semi-colon and white space
+delimiters and processes the segments as individual lines. unrecognized commands
+between semicolons are simply thrown away. For the shell path, we simply store
+the original path to our command in our environment struct and recursively call
+the shell if shell is executed; this can be repeated until the program hits the
+forked process limit.
+
+Extra Credit: We did not attempt any extra credit in this project.
+
+Known Bugs/Issues: The help command does not exactly run as specified in the
+specifications. We were unable to resolve calling the more filter on our help
+file from different computers due to different potential paths. It prints out
+the manual for our shell directly to the shell rather than using the more
+filter.
