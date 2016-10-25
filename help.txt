@@ -1,0 +1,15 @@
+HNG (HNG Not GNU!) bash, version 0.0.1-release (x86_64-whatever-you're-running-this-on)
+These shell commands are defined internally.  Type `help' to see this list.
+If this was a real bash, you'd be able to type `help name' to find out more about the function `name'.
+If this was a real bash, you'd be able to use `info bash' to find out more about the shell in general.
+If this was a real bash, you'd be able to use `man -k' or `info' to find out more about commands not in this list.
+
+cd [directory]  : Change the current default directory to [directory]. If the [directory] argument is not present, report the current directory.
+clr             : Clear the screen.									
+dir [directory] : List the contents of directory [directory].
+environ         : List all the environment strings.					
+echo [comment]  : Display [comment] on the display followed by a new line 
+help            : Display the user manual using the more filter.							
+pause           : Pause operation of the shell until 'Enter' is pressed. 							
+quit            : Quit the shell.
+[NEW] sing      : Sings a sweet lullaby to the user. 
