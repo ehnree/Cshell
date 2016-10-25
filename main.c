@@ -107,7 +107,7 @@ void init_shell(int argc, char* argv[], char* envp[])
 		exit(EXIT_FAILURE);
 	} else {
 		strcat(strcpy(env.shell, env.PWD), "myshell");
-		strcat(strcpy(env.shell, env.PWD), "readme.txt");
+		//strcat(strcpy(env.shell, env.PWD), "readme.txt");
 		//fprintf("PWD: %s\n", env.PWD);
 	}
 
@@ -227,7 +227,7 @@ void shell_fn(char* line)
 		} else if ((strcmp(token, "shell")) == 0) {
 			shell_exec(env.shell, orig_line);
 		} else if ((strcmp(token, "help")) == 0) {
-			
+			shell_exec("/usr/bin/more", orig_line);
 		}
 	}
 
@@ -321,6 +321,8 @@ void shell_exec(char* exec, char* line)
 				dup2(fd, 1);
 				close(fd);
 			}
+			printf("exec: %s\n", exec);
+			printf("res: %s\n", *res);
 			execve( exec, res, NULL );
 			break;
 		default:
