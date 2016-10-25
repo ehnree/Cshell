@@ -45,6 +45,7 @@ typedef struct {
 	char** argv;
 	int argc;
 	char shell[1024];
+	char readme[1024];
 } ENV;
 
 typedef struct {
@@ -55,10 +56,10 @@ typedef struct {
 	void (*pause)();
 	void (*echo)(char*);
 	void (*environ)();
+	void (*quit)();
 
 	// TODO
 	void (*help)();
-	void (*quit)();
 } CMD;
 
 CMD cmd;
@@ -75,13 +76,13 @@ void shell_pwd();
 void shell_clr();
 void shell_pause();
 void shell_dir(char* dir);
+void shell_quit();
+void shell_exec(char* exec, char* line);
 void shell_environ();
 
 
 // TODO
-void shell_exec(char* exec, char* line);
 void shell_help();
-void shell_quit();
 
 
 int main(int argc, char* argv[], char* envp[])
@@ -106,7 +107,8 @@ void init_shell(int argc, char* argv[], char* envp[])
 		exit(EXIT_FAILURE);
 	} else {
 		strcat(strcpy(env.shell, env.PWD), "myshell");
-		printf("PWD: %s\n", env.PWD);
+		strcat(strcpy(env.shell, env.PWD), "readme.txt");
+		//fprintf("PWD: %s\n", env.PWD);
 	}
 
 
@@ -224,6 +226,8 @@ void shell_fn(char* line)
 			cmd.quit();
 		} else if ((strcmp(token, "shell")) == 0) {
 			shell_exec(env.shell, orig_line);
+		} else if ((strcmp(token, "help")) == 0) {
+			
 		}
 	}
 
