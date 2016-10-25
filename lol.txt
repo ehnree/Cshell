@@ -1,0 +1,4 @@
+I am a child process!
+Args passed:
+./test
+hi

@@ -44,6 +44,7 @@ typedef struct {
 	char** env;
 	char** argv;
 	int argc;
+	char shell[1024];
 } ENV;
 
 typedef struct {
@@ -57,6 +58,7 @@ typedef struct {
 
 	// TODO
 	void (*help)();
+	void (*quit)();
 } CMD;
 
 CMD cmd;
@@ -75,9 +77,11 @@ void shell_pause();
 void shell_dir(char* dir);
 void shell_environ();
 
+
 // TODO
 void shell_exec(char* exec, char* line);
 void shell_help();
+void shell_quit();
 
 
 int main(int argc, char* argv[], char* envp[])
@@ -101,8 +105,10 @@ void init_shell(int argc, char* argv[], char* envp[])
 		fprintf(stderr, "init_shell(): getcwd() error. cannot get PWD\n");
 		exit(EXIT_FAILURE);
 	} else {
+		strcat(strcpy(env.shell, env.PWD), "myshell");
 		printf("PWD: %s\n", env.PWD);
 	}
+
 
 	// Set mode
 	if (argc == 1) {
@@ -112,11 +118,11 @@ void init_shell(int argc, char* argv[], char* envp[])
 		//batch mode
 		env.mode = BATCH_MODE;
 		//TODO what happens when fopen fails?
-		env.buffer = fopen(argv[1], "r");
-	} else {
-		fprintf( stderr, "Proper usage of shell is: shell [batchfile]\n");
-		exit(EXIT_FAILURE);
-	}
+		env.buffer = fopen(argv[1], "r");}
+	// } else {
+	// 	fprintf( stderr, "Proper usage of shell is: shell [batchfile]\n");
+	// 	exit(EXIT_FAILURE);
+	// }
 
 	cmd.cd = &shell_cd;
 	cmd.pwd = &shell_pwd;
@@ -125,15 +131,17 @@ void init_shell(int argc, char* argv[], char* envp[])
 	cmd.clr = &shell_clr;
 	cmd.pause = &shell_pause;
 	cmd.environ = &shell_environ;
+	cmd.quit = &shell_quit;
 }
 
 void read_lines()
 {
 	char* line = NULL;
+	char* line_seg = NULL;
 	size_t size;
 
 	while(1) {
-		printf("%s ~> ", env.PWD);
+		if(env.mode == INTERACTIVE_MODE) printf("%s ~> ", env.PWD);
 
 		// Get executable name
 		if (getline(&line, &size, env.buffer) == -1) {
@@ -148,8 +156,36 @@ void read_lines()
 			if ((pos=strchr(line, '\n')) != NULL)
 		    	*pos = '\0';
 
+			if (env.mode == BATCH_MODE){
+
+				char** commands = NULL;
+				char** temp = NULL;
+				int n_commands = 0;
+				//printf("line: %s\n", line);
+				line_seg = strtok(line, ";\n");
+				while(line_seg != NULL){
+					commands = realloc(commands, sizeof(char*) * ++n_commands);
+					if(commands == NULL){
+						fprintf(stderr, "failed to allocate commands");
+						exit(1); //TODO what happens when we fail to allocate memory
+					}
+
+					commands[n_commands - 1] = line_seg;
+					line_seg = strtok(NULL, ";");
+					commands = realloc(commands, sizeof (char*) * (n_commands+1));
+					//printf("seg: %s\n", line_seg);
+					commands[n_commands] = 0;
+				}
+				temp = commands;
+				while(*commands != NULL){
+					shell_fn(*commands);
+					commands++;
+				}
+				free(temp);
+			} else {
 			// pass stripped line
-			shell_fn(line);
+				shell_fn(line);
+			}
 		}
 	}
 }
@@ -184,6 +220,10 @@ void shell_fn(char* line)
 			cmd.pause();
 		} else if ((strcmp(token, "environ")) == 0) {
 			cmd.environ();
+		} else if ((strcmp(token, "quit")) == 0) {
+			cmd.quit();
+		} else if ((strcmp(token, "shell")) == 0) {
+			shell_exec(env.shell, orig_line);
 		}
 	}
 
@@ -353,4 +393,9 @@ void shell_environ()
 void shell_clr()
 {
 	printf("\033[2J");
+}
+
+void shell_quit()
+{
+	exit(0);
 }
